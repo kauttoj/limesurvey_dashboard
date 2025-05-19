@@ -3,7 +3,7 @@ LABEL maintainer="JanneK"
 # Copy only requirements.txt first to leverage Docker cache
 COPY requirements.txt requirements.txt
 COPY mysurvey.py mysurvey.py
-COPY .env .env
+# COPY .env .env
 RUN pip install -r requirements.txt
 #Copy files to your container
 COPY app.py ./app.py
