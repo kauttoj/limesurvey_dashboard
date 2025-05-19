@@ -13,7 +13,9 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import requests
-import textwrap                   # <–– new
+import textwrap
+import tempfile
+import pathlib
 
 # --- constants: tweak if you like ---
 TITLE_WRAP = 60   # max characters per line for question titles
@@ -34,7 +36,8 @@ except:
         from limesurveyrc2api.limesurveyrc2api import LimeSurveyRemoteControl2API as LimeSurvey
 
 # Path to cache file
-CACHE_FILE = 'survey_cache.pkl'
+CACHE_DIR = pathlib.Path(tempfile.gettempdir())
+CACHE_FILE = CACHE_DIR / 'survey_cache.pkl'
 DATA_TIMESTAMP = None
 
 def _wrap(text: str, width: int) -> str:
@@ -83,7 +86,7 @@ def fetch_responses():
 # Safely update cache with atomic replace via tempfile
 def update_cache():
     df = fetch_responses()
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.pkl') as tmp:
+    with tempfile.NamedTemporaryFile(dir=CACHE_DIR, delete=False, suffix='.pkl') as tmp:
         df.to_pickle(tmp.name)
     os.replace(tmp.name, CACHE_FILE)
 
