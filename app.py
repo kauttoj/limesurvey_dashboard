@@ -202,4 +202,4 @@ app = main()
 server = app.server
 
 if __name__ == '__main__':
-    app.run(debug=False, port=8050,dev_tools_hot_reload=False,use_reloader=False)#,host="0.0.0.0")
+    app.run(debug=False, port=8080,dev_tools_hot_reload=False,use_reloader=False,host="0.0.0.0")
