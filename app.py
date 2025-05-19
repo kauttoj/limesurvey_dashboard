@@ -13,6 +13,11 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import requests
+import textwrap                   # <–– new
+
+# --- constants: tweak if you like ---
+TITLE_WRAP = 60   # max characters per line for question titles
+TICK_WRAP  = 20   # max characters per line for answer options
 
 from mysurvey import (
     API_URL, USERNAME, PASSWORD,
@@ -31,6 +36,13 @@ except:
 # Path to cache file
 CACHE_FILE = 'survey_cache.pkl'
 DATA_TIMESTAMP = None
+
+def _wrap(text: str, width: int) -> str:
+    """Return text with <br>-separated line breaks, without splitting words."""
+    return '<br>'.join(textwrap.wrap(str(text),
+                                     width=width,
+                                     break_long_words=False,
+                                     replace_whitespace=False))
 
 # Generic fetcher: returns DataFrame for any survey per config
 def fetch_responses():
@@ -59,7 +71,12 @@ def fetch_responses():
 
     client.close()
     df = pd.DataFrame(data['responses'])
+
+    assert len(df) > 0,"Loaded dataframe is empty!"
+
     df['is_completed'] = df['lastpage'] >= LASTPAGE_THRESHOLD
+
+    print('Data retrieved online succesfully!')
 
     return df
 
@@ -91,26 +108,46 @@ def poll_cache():
             print(f"[poll_cache] failed: {e}")
 
 # Build graphs from DataFrame using PARAMETERS mapping
+# --- replace your current build_graphs() with this version ---
 def build_graphs(df):
-    rows = []
-    current = []
+    rows, current = [], []
     for code, label in PARAMETERS.items():
-        if code not in df.columns:
+        if code == "token" or code not in df.columns:
             continue
-        counts = df[code].value_counts().sort_index().reset_index()
-        counts.columns = [code, 'Count']
-        fig = px.bar(
-            counts, x=code, y='Count',
-            labels={code: label, 'Count': 'Count'},
-            title=label
+
+        counts = (
+            df[code]
+            .value_counts()
+            .sort_index()
+            .reset_index(name="Count")  # <-- assigns the second column’s name
+            .rename(columns={"index": code})  # <-- changes only the first column
         )
-        card = dbc.Card(dbc.CardBody(dcc.Graph(figure=fig)), className='mb-4 shadow-sm')
+
+        # wrap long question text and answer options
+        wrapped_title = _wrap(label, TITLE_WRAP)
+        counts[code]  = counts[code].apply(lambda s: _wrap(s, TICK_WRAP))
+
+        fig = px.bar(
+            counts,
+            x=code,
+            y="Count",
+            labels={code: '', "Count": "Count"},
+            title=wrapped_title
+        )
+
+        # NEW: rotate tick labels −30° to avoid overlap
+        fig.update_xaxes(tickangle=10)
+
+        card = dbc.Card(dbc.CardBody(dcc.Graph(figure=fig)),
+                        className="mb-4 shadow-sm")
         current.append(dbc.Col(card, md=6))
+
         if len(current) == 2:
-            rows.append(dbc.Row(current, className='mb-4'))
+            rows.append(dbc.Row(current, className="mb-4"))
             current = []
+
     if current:
-        rows.append(dbc.Row(current, className='mb-4'))
+        rows.append(dbc.Row(current, className="mb-4"))
     return rows
 
 # Main app
@@ -152,9 +189,10 @@ def main():
         # Load from cache and rebuild
         df = load_cached_data()
         total = len(df)
+        n_tokens = len([x for x in list(df['token'].unique()) if x is not None])
         completed = df['is_completed'].sum()
         partial = total - completed
-        intro = (f"This dashboard shows live results for selected survey variables. Currently total {partial} partial and {completed} completed responses. Data updated {DATA_TIMESTAMP}.")
+        intro = (f"This dashboard shows live results for selected survey variables. Currently {n_tokens} unique tokens with total {partial} PARTIAL and {completed} FULL responses. Data updated {DATA_TIMESTAMP}.")
         graphs = build_graphs(df)
         return intro, graphs, last.isoformat()
 
@@ -164,4 +202,4 @@ app = main()
 server = app.server
 
 if __name__ == '__main__':
-    app.run(debug=False, port=8080,dev_tools_hot_reload=False,use_reloader=False,host="0.0.0.0")
+    app.run(debug=False, port=8050,dev_tools_hot_reload=False,use_reloader=False)#,host="0.0.0.0")

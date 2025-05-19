@@ -12,13 +12,14 @@ LASTPAGE_THRESHOLD = int(os.getenv('LIMESURVEY_LASTPAGE', 0))
 
 # Mapping of question codes to display labels
 PARAMETERS = {
-    'lastpage': 'Last Page Reached',
-    'is_completed': 'Completed Survey',
-    'q1age': 'Age',
-    'q1gender': 'Gender',
-    'q3edu': 'Education Level',
-    'q4lang': 'Language Skill',
-    'q5reading': 'Reading Skill',
-    'q6onlinenews': 'Online News Capacity',
-    'q7readfreq': 'Frequency of Reading',
+    'token': 'token',
+    'lastpage': 'Viimeisin tallennettu sivu',
+    'is_completed': 'Vastattu loppuun',
+    'q1age': 'Mikä on ikäsi?',
+    'q1gender': 'Mikä on sukupuolesi?',
+    'q3edu': 'Mikä on korkein suorittamasi koulutus?',
+    'q4lang': 'Mikä on suomen kielen tasosi?',
+    'q5reading': 'Millainen on lukutaitosi suomen kielellä?',
+    'q6onlinenews': 'Miten hyvin pystyt lukemaan suomeksi uutisia mediasta, esimerkiksi Helsingin Sanomat tai YLEn verkkosivut?',
+    'q7readfreq': 'Kuinka usein luet suomenkielisiä uutisia?',
 }
