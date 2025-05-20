@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.11-slim
 LABEL maintainer="JanneK"
 # Copy only requirements.txt first to leverage Docker cache
 COPY requirements.txt requirements.txt

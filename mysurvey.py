@@ -13,6 +13,7 @@ LASTPAGE_THRESHOLD = int(os.getenv('LIMESURVEY_LASTPAGE', 0))
 # Mapping of question codes to display labels
 PARAMETERS = {
     'token': 'token',
+    'startdate':'startdate',
     'lastpage': 'Viimeisin tallennettu sivu',
     'is_completed': 'Vastattu loppuun',
     'q1age': 'Mikä on ikäsi?',
