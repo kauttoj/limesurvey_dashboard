@@ -199,8 +199,15 @@ def main():
                 html.Div([
                     html.Span("Show data after:", className="me-2 fw-bold"),
                     dcc.DatePickerSingle(id='cutoff-date-picker', date=CUTOFF_TIME.date(),display_format="DD.MM.YYYY",className='me-2'),
-                    dcc.Input(id='cutoff-time-input', type='text', value=CUTOFF_TIME.strftime("%H:%M"),
-                              debounce=True, style={'width': '90px'})
+                    dcc.Input(id='cutoff-time-input', type='text', value=CUTOFF_TIME.strftime("%H:%M"),debounce=True, style={'width':'90px'}),
+                    # NEW: completed-only checkbox
+                    dbc.Checklist(
+                        id="completed-only-checkbox",
+                        options=[{"label": "Completed only", "value": 1}],
+                        value=[],
+                        inline=True,
+                        className="ms-2 mb-0"
+                    )
                 ], className='d-flex align-items-center flex-wrap'),
                 xs=12, md='auto', className='mb-2'
             )
@@ -222,10 +229,12 @@ def main():
         [Input('interval-component', 'n_intervals'),
          Input('refresh-button', 'n_clicks'),
          Input('cutoff-date-picker', 'date'),
-         Input('cutoff-time-input', 'value')],
+         Input('cutoff-time-input', 'value'),
+         Input("completed-only-checkbox", 'value')
+         ],
         [State('last-refresh-store', 'data')]
     )
-    def update_dashboard(n_intervals, n_clicks, cutoff_date, cutoff_time, last_refresh):
+    def update_dashboard(n_intervals, n_clicks, cutoff_date, cutoff_time,completed_only,last_refresh):
         """Update intro text, graphs, and refresh store.
 
         Accepts cutoff selectors; updates global CUTOFF_TIME; handles empty dataframes gracefully."""
@@ -259,6 +268,8 @@ def main():
         # Load from cache and *then* apply cut‑off filter
         df_all = load_cached_data()
         df = filter_by_cutoff(df_all, CUTOFF_TIME)
+        if len(completed_only)>0 and completed_only[0]:
+            df = df.loc[df['is_completed']]
 
         # Gracefully handle empty dataframe
         if df.empty or 'token' not in df.columns:
@@ -278,7 +289,6 @@ def main():
         return intro, graphs, last.isoformat()
 
     return app
-
 
 app = main()
 server = app.server
